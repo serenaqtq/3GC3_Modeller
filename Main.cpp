@@ -121,7 +121,7 @@ void eraseSelected() {
 		if ((*p).intersect){
 			printf("%i\n", (*p).intersect);
 			track.erase(p);
-			//return p;
+			break;
 		}
 		p++;
 	}
@@ -237,11 +237,15 @@ void mouse(int btn, int state, int x, int y){
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		CalcIntersections(*p);
+		p++;
+		
 	}
+	//printf("%s\n", "compute intersection complete");
 	if(btn == GLUT_RIGHT_BUTTON) {
 		if (state == GLUT_DOWN){
 			
 			if (!track.empty()) {
+				printf("%s\n", "perform erase");
 				eraseSelected();
 			} else {
 				printf("%s\n", "No object in the scene");
@@ -325,15 +329,19 @@ void draw(struct Object in) {
 			break;
 		case 1:
 			glutSolidTeapot(1);
+			//glutSolidCube(1);
 			break;
 		case 2:
 			glutSolidSphere(1,20,20);
+			//glutSolidCube(1);
 			break;
 		case 3:
 			glutSolidCone(1,1,20,20);
+			//glutSolidCube(1);
 			break;
 		case 4:
 			glutSolidTetrahedron();
+			//glutSolidCube(1);
 			break;
 	}
 }
@@ -360,9 +368,6 @@ void display(void)
 	drawPlane();
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
-		/*if (p != track.end()--) {
-			
-		}*/
 		//CalcIntersections(*p);
 		glPushMatrix();
 			glTranslatef((*p).posX, (*p).posY, (*p).posZ);
@@ -378,7 +383,7 @@ void display(void)
 		glPopMatrix();
 		p++;
 	}
-	printf("%i\n", track.size());
+	//printf("%i\n", track.size());
 	//switch our buffers for a smooth animation
 	glutSwapBuffers();
 }
