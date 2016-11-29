@@ -32,6 +32,7 @@ struct Object{
 	float rotateX, rotateY, rotateZ;
 	float scaleX, scaleY, scaleZ;
 	int shape;
+	int m;//material
 	bool intersect;
 };
 typedef struct materialStruct {
@@ -41,44 +42,45 @@ typedef struct materialStruct {
 	float shiny; 
 } materialStruct;
 
-materialStruct m1 = {
-	{0.3, 0.0, 0.0, 1.0},
-	{0.6, 0.0, 0.0, 1.0},
-	{0.8, 0.6, 0.6, 1.0},
-	32.0
+materialStruct m1 = {//jade
+	{0.135,0.2225,0.1575},
+	{0.54,0.89,0.63},
+	{0.316228,0.316228,0.316228},
+	0.1
 };
 
-materialStruct m2 = {
-	{0.83, 0.52, 0.63, 1.0},
-    {0.28, 0.87, 0.11, 1.0},
-    {0.99, 0.91, 0.81, 1.0},
-    27
+materialStruct m2 = {//brass
+	{0.329412,0.223529,0.027451},
+    {0.780392,0.568627,0.113725},
+    {0.992157,0.941176,0.807843},
+    0.21794872
 };
 
-materialStruct m3 = {
-	{0.5, 0.0, 0.8, 1.0},
-    {0.5, 0.8, 0.0, 1.0},
-    {0.8, 0.20, 0.5, 1.0},
-    38
+materialStruct m3 = {//gold
+	{0.24725,0.1995,0.0745},
+    {0.75164,0.60648,0.22648},
+    {0.628281,0.555802,0.366065},
+    0.4
 };
 
-materialStruct m4 = {
-	{0.42, 0.24, 0.0, 1.0},
-    {0.7, 0.22, 0.35, 1.0},
-    {0.99, 0.1, 0.24, 1.0},
-    42
+materialStruct m4 = {//pearl
+	{0.25,0.20725,0.20725},
+    {1,0.829,0.829},
+    {0.296648,0.296648,0.296648},
+    0.088
 };
 
-materialStruct m5 = {
-	{0.12, 0.88, 0.42, 1.0},
-    {0.88, 0.12, 0.0, 1.0},
-    {0.18, 0.24, 0.68, 1.0},
-    50
+materialStruct m5 = {//turquoise
+	{0.1,0.18725,0.1745},
+    {0.396,0.74151,0.69102},
+    {0.297254,0.30829,0.306678},
+    0.1
 };
 
 void setMaterial(int num) {
 	switch (num) {
 		case 1:
+			//printf("%s\n", "m1");
 			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, m1.m_amb);
     		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, m1.m_dif);
     		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, m1.m_spec);
@@ -86,6 +88,7 @@ void setMaterial(int num) {
     		glColorMaterial(GL_AMBIENT, GL_DIFFUSE);
     		break;
 		case 2:
+		//printf("%s\n", "m2");
 			glMaterialfv(GL_FRONT_AND_BACK, GL_AMBIENT, m2.m_amb);
     		glMaterialfv(GL_FRONT_AND_BACK, GL_DIFFUSE, m2.m_dif);
     		glMaterialfv(GL_FRONT_AND_BACK, GL_SPECULAR, m2.m_spec);
@@ -203,9 +206,22 @@ struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, 
 	result.scaleY = sY;
 	result.scaleZ = sZ;
 	result.intersect = true;
+	result.m = material;
 	result.shape = rand() % 5;
 	return result;
 }
+
+void changeSelectedMaterial() {
+	list<struct Object>::iterator p = track.begin();
+	while(p != track.end()){
+		if ((*p).intersect) {
+			(*p).m = material;
+		}
+		
+		p++;
+	}
+}
+
 //keyboard for exiting when q or escape is pressed
 void keyboard(unsigned char key, int xIn, int yIn)
 {
@@ -217,6 +233,7 @@ void keyboard(unsigned char key, int xIn, int yIn)
 			exit(0);
 			break;
 		case 'z':
+			{
 			list<struct Object>::iterator p = track.begin();
 			while(p != track.end()){
 				(*p).intersect = false;
@@ -226,10 +243,40 @@ void keyboard(unsigned char key, int xIn, int yIn)
 			
 			track.push_back(createObject(rand()%15, rand()%15, rand()%15, rand()%10, rand()%10, rand()%10, rand()%3+1, rand()%3+1, rand()%3+1));
 			break;
+			}
+		case 'm':
+			printf("%s\n", "Change the material of selected object to current material");
+			changeSelectedMaterial();
+			break;
+		case '1':
+			material = 1;
+			printf("%s\n", "Switch material to m1");
+			break;
+		case '2':
+			material = 2;
+			printf("%s\n", "Switch material to m2");
+			break;
+		case '3':
+			material = 3;
+			printf("%s\n", "Switch material to m3");
+			break;
+		case '4':
+			material = 4;
+			printf("%s\n", "Switch material to m4");
+			break;
+		case '5':
+			material = 5;
+			printf("%s\n", "Switch material to m5");
+			break;
+		
 	}
 	glutPostRedisplay();
 }
+void special(int key, int x, int y) {
+	switch (key) {
 
+	}
+}
 void mouse(int btn, int state, int x, int y){
 
 	mouseX = x;
@@ -323,6 +370,7 @@ void init(void)
 
 
 void draw(struct Object in) {
+	setMaterial(in.m);
 	switch (in.shape){
 		case 0:
 			glutSolidCube(1);
@@ -358,7 +406,7 @@ void display(void)
 
     
     //enable material
-    setMaterial(material);
+    //setMaterial(material);
     
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
@@ -393,6 +441,7 @@ void callBackInit(){
 	glutDisplayFunc(display);
 	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouse);
+	glutSpecialFunc(special);
 	//glutMotionFunc(motion);
 	//glutPassiveMotionFunc(passive);
 	//glutReshapeFunc(reshape);
