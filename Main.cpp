@@ -18,7 +18,7 @@ using namespace std;
 #define WINDOW_SIZE_WIDTH 600
 #define WINDOW_SIZE_HEIGHT 600
 #define TEAPOT_SPEED 0.01
-#define BOUND_OFFSET 0.55
+#define BOUND_OFFSET 0.65
 float angle = 2;
 int material = 1;
 float camPos[] = {20, 20, 20};	//where the camera is
@@ -33,6 +33,7 @@ struct Object{
 	float scaleX, scaleY, scaleZ;
 	int shape;
 	int m;//material
+	float x_offset, y_offset, z_offset;//six plane, each float represent two plane
 	bool intersect;
 };
 typedef struct materialStruct {
@@ -122,7 +123,7 @@ void eraseSelected() {
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect){
-			printf("%i\n", (*p).intersect);
+			//printf("%i\n", (*p).intersect);
 			track.erase(p);
 			break;
 		}
@@ -185,9 +186,9 @@ void CalcIntersections(struct Object &teapot){
 	//now that we have our point on the xy plane at the level of the teapot,
 	//use it to see if this point is inside a box centered at the teapots
 	//location
-	if(pt[0] > teapot.posX - BOUND_OFFSET && pt[0] < teapot.posX + BOUND_OFFSET &&
-		pt[1] > teapot.posY - BOUND_OFFSET && pt[1] < teapot.posY + BOUND_OFFSET &&
-		pt[2] > teapot.posZ - BOUND_OFFSET && pt[2] < teapot.posZ + BOUND_OFFSET)
+	if(pt[0] > teapot.posX - teapot.x_offset && pt[0] < teapot.posX + teapot.x_offset &&
+		pt[1] > teapot.posY - teapot.y_offset && pt[1] < teapot.posY + teapot.y_offset &&
+		pt[2] > teapot.posZ - teapot.z_offset && pt[2] < teapot.posZ + teapot.z_offset)
 		teapot.intersect = true;
 	else
 		teapot.intersect = false;
@@ -208,6 +209,16 @@ struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, 
 	result.intersect = true;
 	result.m = material;
 	result.shape = rand() % 5;
+	if (result.shape == 4) {
+		result.x_offset = 0.65;
+		result.y_offset = 0.65;
+		result.z_offset = 0.65;
+	} else {
+		result.x_offset = 0.75;
+		result.y_offset = 0.75;
+		result.z_offset = 0.75;
+	}
+
 	return result;
 }
 
@@ -241,7 +252,7 @@ void keyboard(unsigned char key, int xIn, int yIn)
 			}
 			printf("%s\n", "Add a shape to the scene");
 			
-			track.push_back(createObject(rand()%15, rand()%15, rand()%15, rand()%10, rand()%10, rand()%10, rand()%3+1, rand()%3+1, rand()%3+1));
+			track.push_back(createObject(rand()%10, rand()%10+1, rand()%10, 0,0,0,1,1,1));
 			break;
 			}
 		case 'm':
@@ -274,8 +285,25 @@ void keyboard(unsigned char key, int xIn, int yIn)
 }
 void special(int key, int x, int y) {
 	switch (key) {
-
+		case GLUT_KEY_LEFT:
+			camPos[2] += 1;
+			break;
+		case GLUT_KEY_RIGHT:
+			camPos[2] -= 1;
+			break;
+		case GLUT_KEY_UP:
+			camPos[1] += 1;
+			break;
+		case GLUT_KEY_DOWN:
+			if (camPos[1] >= 1) {
+				camPos[1]-=1;
+			} else {
+				printf("%s\n", "Flliping is not allowed");
+			}
+			break;
+			
 	}
+	glutPostRedisplay();
 }
 void mouse(int btn, int state, int x, int y){
 
@@ -308,7 +336,7 @@ void mouse(int btn, int state, int x, int y){
 }
 
 void drawAxis()
-{
+{	//glDisable(GL_COLOR_MATERIAL);
 	glBegin(GL_LINES);
 		glColor3f(1, 0, 0);
 		glVertex3f(0,0,0);
@@ -320,9 +348,11 @@ void drawAxis()
 		glVertex3f(0,0,0);
 		glVertex3f(0,0,50);
 	glEnd();
+	//glEnable(GL_COLOR_MATERIAL);
 }
 
 void drawPlane() {
+	//glDisable(GL_COLOR_MATERIAL);
 	glBegin(GL_QUADS);
 		glColor3f(1,0.43,0.78);
 		glNormal3f(0,1,0);		
@@ -335,6 +365,7 @@ void drawPlane() {
 		glNormal3f(0,1,0);
 		glVertex3f(50,0,0);
 	glEnd();
+	//glEnable(GL_COLOR_MATERIAL);
 }
 
 void init(void)
@@ -373,23 +404,19 @@ void draw(struct Object in) {
 	setMaterial(in.m);
 	switch (in.shape){
 		case 0:
-			glutSolidCube(1);
+			glutSolidIcosahedron();
 			break;
 		case 1:
-			glutSolidTeapot(1);
-			//glutSolidCube(1);
+			glutSolidTeapot(1);		
 			break;
 		case 2:
-			glutSolidSphere(1,20,20);
-			//glutSolidCube(1);
+			glutSolidSphere(1,20,20);		
 			break;
 		case 3:
-			glutSolidCone(1,1,20,20);
-			//glutSolidCube(1);
+			glutSolidOctahedron();
 			break;
 		case 4:
-			glutSolidTetrahedron();
-			//glutSolidCube(1);
+			glutSolidIcosahedron();
 			break;
 	}
 }
