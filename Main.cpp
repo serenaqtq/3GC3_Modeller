@@ -19,7 +19,7 @@ using namespace std;
 #define WINDOW_SIZE_HEIGHT 600
 #define TEAPOT_SPEED 0.01
 #define BOUND_OFFSET 0.65
-float angle = 2;
+float angle = 20;
 int material = 1;
 float camPos[] = {20, 20, 20};	//where the camera is
 int mouseX = 0, mouseY = 0; 
@@ -233,75 +233,201 @@ void changeSelectedMaterial() {
 	}
 }
 
+void rotateSelected(int key) {
+	list<struct Object>::iterator p = track.begin();
+	while(p != track.end()){
+		if ((*p).intersect) {
+			switch (key) {
+				case 'a':
+					(*p).rotateZ--;
+					break;
+				case 'd':
+					(*p).rotateZ++;
+					break;
+				case 'w':
+					(*p).rotateX--;
+					break;
+				case 's':
+					(*p).rotateX++;
+					break;
+				case 'q':
+					(*p).rotateY--;
+					break;
+				case 'e':
+					(*p).rotateY++;
+					break;
+			}
+			break;
+		}		
+		p++;
+	}	
+}
+
+
+void scaleSelected(int key) {
+	printf("%i\n", key);
+	list<struct Object>::iterator p = track.begin();
+	while(p != track.end()){
+		if ((*p).intersect) {
+			//printf("%s\n", "scale small z axis");
+			switch (key) {
+				case 1://a
+					printf("%s\n", "here");
+					if ((*p).scaleZ > 0.2) {
+						(*p).scaleZ-=0.2;
+						(*p).z_offset *= (*p).scaleZ;
+					} else {
+						printf("%s\n", "Too small! try to scale another axis!");
+					}
+					
+					break;
+				case 4://d
+					(*p).scaleZ+=0.2;
+					(*p).z_offset *= (*p).scaleZ;
+					break;
+				case 'w':
+					if ((*p).scaleX > 0.2) {
+						(*p).scaleX-=0.2;
+						(*p).x_offset *= (*p).scaleX;
+					} else {
+						printf("%s\n", "Too small! try to scale another axis!");
+					}
+					break;
+				case 's':
+					(*p).scaleX+=0.2;
+					(*p).x_offset *= (*p).scaleX;
+					break;
+				case 'q':
+					if ((*p).scaleY > 0.2) {
+						(*p).scaleY-=0.2;
+						(*p).y_offset *= (*p).scaleY;
+					} else {
+						printf("%s\n", "Too small! try to scale another axis!");
+					}
+					break;
+				case 'e':
+					(*p).scaleY+=0.2;
+					(*p).y_offset *= (*p).scaleY;
+					break;
+			}
+			(*p).intersect = true;
+			//CalcIntersections(*p);
+			break;
+		}		
+		p++;
+	}	
+}
+
 //keyboard for exiting when q or escape is pressed
 void keyboard(unsigned char key, int xIn, int yIn)
 {
-	//int mod = glutGetModifiers();
-	switch (key)
-	{
-		case 'q':
-		case 27:	//27 is the esc key
-			exit(0);
-			break;
-		case 'z':
-			{
-			list<struct Object>::iterator p = track.begin();
-			while(p != track.end()){
-				(*p).intersect = false;
-				p++;
-			}
-			printf("%s\n", "Add a shape to the scene");
+	int mod = glutGetModifiers();
+	if (mod == GLUT_ACTIVE_ALT) {
+		printf("%s\n", "Enter rotate selected object mode");
+		rotateSelected(key);
+	} else if (mod == GLUT_ACTIVE_CTRL) {
+		printf("%s\n", "Enter scale selected object mode");
+		scaleSelected(key);
+	} else {
+		switch (key)
+		{
+			case 'q':
+			case 27:	//27 is the esc key
+				exit(0);
+				break;
+			case 'z':
+				{
+				list<struct Object>::iterator p = track.begin();
+				while(p != track.end()){
+					(*p).intersect = false;
+					p++;
+				}
+				printf("%s\n", "Add a shape to the scene");
+				
+				track.push_back(createObject(rand()%10, rand()%10+1, rand()%10, 0,0,0,1,1,1));
+				break;
+				}
+			case 'm':
+				printf("%s\n", "Change the material of selected object to current material");
+				changeSelectedMaterial();
+				break;
+			case '1':
+				material = 1;
+				printf("%s\n", "Switch material to m1");
+				break;
+			case '2':
+				material = 2;
+				printf("%s\n", "Switch material to m2");
+				break;
+			case '3':
+				material = 3;
+				printf("%s\n", "Switch material to m3");
+				break;
+			case '4':
+				material = 4;
+				printf("%s\n", "Switch material to m4");
+				break;
+			case '5':
+				material = 5;
+				printf("%s\n", "Switch material to m5");
+				break;
 			
-			track.push_back(createObject(rand()%10, rand()%10+1, rand()%10, 0,0,0,1,1,1));
-			break;
-			}
-		case 'm':
-			printf("%s\n", "Change the material of selected object to current material");
-			changeSelectedMaterial();
-			break;
-		case '1':
-			material = 1;
-			printf("%s\n", "Switch material to m1");
-			break;
-		case '2':
-			material = 2;
-			printf("%s\n", "Switch material to m2");
-			break;
-		case '3':
-			material = 3;
-			printf("%s\n", "Switch material to m3");
-			break;
-		case '4':
-			material = 4;
-			printf("%s\n", "Switch material to m4");
-			break;
-		case '5':
-			material = 5;
-			printf("%s\n", "Switch material to m5");
-			break;
-		
+		}
 	}
+	
 	glutPostRedisplay();
 }
-void special(int key, int x, int y) {
-	switch (key) {
-		case GLUT_KEY_LEFT:
-			camPos[2] += 1;
-			break;
-		case GLUT_KEY_RIGHT:
-			camPos[2] -= 1;
-			break;
-		case GLUT_KEY_UP:
-			camPos[1] += 1;
-			break;
-		case GLUT_KEY_DOWN:
-			if (camPos[1] >= 1) {
-				camPos[1]-=1;
-			} else {
-				printf("%s\n", "Flliping is not allowed");
+
+void translateSelected(int key) {
+	list<struct Object>::iterator p = track.begin();
+	while(p != track.end()){
+		if ((*p).intersect) {
+			switch (key) {
+				case GLUT_KEY_LEFT:
+					(*p).posX--;
+					break;
+				case GLUT_KEY_RIGHT:
+					(*p).posX++;
+					break;
+				case GLUT_KEY_UP:
+					(*p).posZ--;
+					break;
+				case GLUT_KEY_DOWN:
+					(*p).posZ++;
+					break;
 			}
 			break;
-			
+		}		
+		p++;
+	}	
+}
+
+
+void special(int key, int x, int y) {
+	int mod = glutGetModifiers();
+	if (mod == GLUT_ACTIVE_ALT){
+		printf("%s\n", "Enter translate selected object mode");
+		translateSelected(key);
+	} else {
+		switch (key) {
+			case GLUT_KEY_LEFT:
+				camPos[2] += 1;
+				break;
+			case GLUT_KEY_RIGHT:
+				camPos[2] -= 1;
+				break;
+			case GLUT_KEY_UP:
+				camPos[1] += 1;
+				break;
+			case GLUT_KEY_DOWN:
+				if (camPos[1] >= 1) {
+					camPos[1]-=1;
+				} else {
+					printf("%s\n", "Flliping is not allowed");
+				}
+				break;
+				
+		}
 	}
 	glutPostRedisplay();
 }
@@ -377,6 +503,7 @@ void init(void)
 
 	glutCreateWindow("Modeller");	//creates the window
 	glEnable(GL_DEPTH_TEST);
+	glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
@@ -404,7 +531,7 @@ void draw(struct Object in) {
 	setMaterial(in.m);
 	switch (in.shape){
 		case 0:
-			glutSolidIcosahedron();
+			glutSolidCube(1);
 			break;
 		case 1:
 			glutSolidTeapot(1);		
@@ -469,14 +596,30 @@ void callBackInit(){
 	glutKeyboardFunc(keyboard);
 	glutMouseFunc(mouse);
 	glutSpecialFunc(special);
-	//glutMotionFunc(motion);
-	//glutPassiveMotionFunc(passive);
-	//glutReshapeFunc(reshape);
-	//glutTimerFunc(0, FPS, 0);
+}
+
+void info() {
+	printf("%s\n\n", "Material: m1 to m5. default as m1");
+	printf("%s\n\n", "Object shape: cube, teapot, sphere, octahedron, Icosahedron");
+	printf("%s\n\n", "Unselected object: yellow");
+	printf("%s\n\n", "Selected object: red");
+	printf("%s\n\n", "Note: the actual colour may looks weird because of the material");
+	printf("%s\n\n", "q: quit the program");
+	printf("%s\n\n", "1 to 5: switch current material");
+	printf("%s\n\n", "m: apply current material to selected object");
+	printf("%s\n\n", "l: load from file");
+	printf("%s\n\n", "s: save to file");
+	printf("%s\n\n", "click(right/left): select object");
+	printf("%s\n\n", "right click object: delete object from scene");
+	printf("%s\n\n", "up key/down key/left key/right key: camera control");
+	printf("%s\n\n", "alt + up key/down key/left key/right key: translate selected object");
+	printf("%s\n\n", "alt + w/a/s/d/q/e: rotate selected object");
+	printf("%s\n\n", "ctrl + w/a/s/d/q/e: scale selected object");
 }
 
 int main(int argc, char** argv)
 {
+	info();
 	glutInit(&argc, argv);		//starts up GLUT
 	srand(time(NULL));
 	init();
