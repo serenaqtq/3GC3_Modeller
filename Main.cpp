@@ -9,7 +9,7 @@ using namespace std;
 
 
 // for file saving loading
-#include <string>
+//#include <string>
 #include <fstream>
 ofstream myfile;
 ifstream yourfile;
@@ -34,8 +34,8 @@ float angle = 20;
 int material = 1;
 float camPos[] = {20, 20, 20};	//where the camera is
 int mouseX = 0, mouseY = 0; 
-float light_pos1[] = {8,8, 0,1};//light 1
-float light_pos2[] = {0,8,8,1};//light 2
+float light_pos1[] = {800,800, 0,1};//light 1
+float light_pos2[] = {0,800,800,1};//light 2
 list<struct Object> track;
 
 struct Object{
@@ -135,16 +135,15 @@ void setMaterial(int num) {
 void load(){
 	track.clear();
 	struct Object obj;
-
-	yourfile.open("saveDoc.txt");
+	printf("%s\n", "Enter file name with .txt");
+	char str[80];
+	scanf("%79s", str);
+	yourfile.open(str);
 	float temp;
-
-	
 
 	// clear everything on current scene
 
 	//loading scene graph
-
 
 	if (yourfile.is_open()){
 	 	while (getline(yourfile,line)){
@@ -218,17 +217,19 @@ void load(){
 
 
 	 	}
+	 	yourfile.close();
 
+	} else{
+		printf("%s\n", "No such file, load fail");
 	}
-			yourfile.close();
-
-
-
 }
 
 
 void save(){
-	myfile.open("saveDoc.txt");
+	printf("%s\n", "Enter file name with .txt");
+	char str[80];
+	scanf("%79s", str);
+	myfile.open(str);
 	list<struct Object>::iterator p = track.begin();
 		while(p != track.end()){
 			myfile<< (*p).posX<<","<<(*p).posY<<","<<(*p).posZ<<","<<(*p).rotateX<<
@@ -337,7 +338,11 @@ struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, 
 		result.x_offset = 0.65;
 		result.y_offset = 0.65;
 		result.z_offset = 0.65;
-	} else {
+	} else if (result.shape == 1) {
+		result.x_offset = 0.85;
+		result.y_offset = 0.85;
+		result.z_offset = 0.85;
+	}else {
 		result.x_offset = 0.75;
 		result.y_offset = 0.75;
 		result.z_offset = 0.75;
@@ -389,49 +394,48 @@ void rotateSelected(int key) {
 
 
 void scaleSelected(int key) {
-	printf("%i\n", key);
+	//printf("%i %i\n", 'a', key);
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect) {
-			//printf("%s\n", "scale small z axis");
 			switch (key) {
-				case 1://a
-					printf("%s\n", "here");
+				case 'A':
 					if ((*p).scaleZ > 0.2) {
 						(*p).scaleZ-=0.2;
-						(*p).z_offset *= (*p).scaleZ;
+						(*p).z_offset -= 0.2;//(*p).scaleZ+0.2;
 					} else {
 						printf("%s\n", "Too small! try to scale another axis!");
 					}
 					
 					break;
-				case 4://d
+				case 'D':
 					(*p).scaleZ+=0.2;
-					(*p).z_offset *= (*p).scaleZ;
+					(*p).z_offset += 0.25;//((*p).scaleZ+0.5);
+					//printf("%d\n", (*p).scaleZ);
 					break;
-				case 'w':
+				case 'W':
 					if ((*p).scaleX > 0.2) {
 						(*p).scaleX-=0.2;
-						(*p).x_offset *= (*p).scaleX;
+						(*p).x_offset -= 0.2;
 					} else {
 						printf("%s\n", "Too small! try to scale another axis!");
 					}
 					break;
-				case 's':
+				case 'S':
 					(*p).scaleX+=0.2;
-					(*p).x_offset *= (*p).scaleX;
+					(*p).x_offset += 0.25;
 					break;
-				case 'q':
+				case 'Q':
 					if ((*p).scaleY > 0.2) {
 						(*p).scaleY-=0.2;
-						(*p).y_offset *= (*p).scaleY;
+						(*p).y_offset -= 0.2;
 					} else {
 						printf("%s\n", "Too small! try to scale another axis!");
 					}
 					break;
-				case 'e':
+				case 'E':
 					(*p).scaleY+=0.2;
-					(*p).y_offset *= (*p).scaleY;
+					(*p).y_offset += 0.25;
 					break;
 			}
 			(*p).intersect = true;
@@ -449,7 +453,7 @@ void keyboard(unsigned char key, int xIn, int yIn)
 	if (mod == GLUT_ACTIVE_ALT) {
 		printf("%s\n", "Enter rotate selected object mode");
 		rotateSelected(key);
-	} else if (mod == GLUT_ACTIVE_CTRL) {
+	} else if (mod == GLUT_ACTIVE_SHIFT) {
 		printf("%s\n", "Enter scale selected object mode");
 		scaleSelected(key);
 	} 
@@ -475,12 +479,42 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				}
 
 			case 's':
-				//printf("%s\n," "Save Scene");
+				printf("%s\n," "Save Scene");
 				save(); 
 				break;
-
+			case 'j':
+          		//decrease y position of light
+          		light_pos1[1] -= 20;
+          		light_pos2[1] -= 20;
+          		break;
+          	case 'u':
+	          	//increase y position of light
+	          	light_pos1[1] += 20;
+	          	light_pos2[1] += 20;
+	          	break;
+			case 'h':
+				light_pos1[0] -= 20;
+	          	light_pos2[0] -= 20;
+	          	break;
+			case 'k':
+				light_pos1[0] += 20;
+	          	light_pos2[0] += 20;
+	          	break;
+	        case 'y':
+	        	light_pos1[2] -= 20;
+	          	light_pos2[2] -= 20;
+	          	break;
+	        case 'i':
+	        	light_pos1[2] += 20;
+	          	light_pos2[2] += 20;
+	          	break;
 			case 'l':
+				printf("%s\n", "Load scene from file");
 				load();
+				break;
+			case 'r':
+				printf("%s\n", "Reset the scene to empty");
+				track.clear();
 				break;
 			case 'm':
 				printf("%s\n", "Change the material of selected object to current material");
@@ -509,7 +543,11 @@ void keyboard(unsigned char key, int xIn, int yIn)
 			
 		}
 	}
-	
+	//to get the u,j work
+	glMatrixMode(GL_MODELVIEW);
+    glLoadIdentity();
+    glLightfv(GL_LIGHT0, GL_POSITION, light_pos1);
+    glLightfv(GL_LIGHT1, GL_POSITION, light_pos2);
 	glutPostRedisplay();
 }
 
@@ -581,7 +619,7 @@ void mouse(int btn, int state, int x, int y){
 		if (state == GLUT_DOWN){
 			
 			if (!track.empty()) {
-				printf("%s\n", "perform erase");
+				//printf("%s\n", "perform erase");
 				eraseSelected();
 			} else {
 				printf("%s\n", "No object in the scene");
@@ -749,7 +787,8 @@ void info() {
 	printf("%s\n\n", "up key/down key/left key/right key: camera control");
 	printf("%s\n\n", "alt + up key/down key/left key/right key: translate selected object");
 	printf("%s\n\n", "alt + w/a/s/d/q/e: rotate selected object");
-	printf("%s\n\n", "ctrl + w/a/s/d/q/e: scale selected object");
+	printf("%s\n\n", "shift + w/a/s/d/q/e: scale selected object");
+	printf("%s\n\n", "h/j/k/y/u/i: control two lighting source on xyz axis");
 }
 
 int main(int argc, char** argv)
