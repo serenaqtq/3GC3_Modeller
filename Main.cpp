@@ -3,7 +3,17 @@
 #include <math.h>
 #include <list>
 #include <ctime>
+#include <iostream>
 using namespace std;
+#include <string.h>
+
+
+// for file saving loading
+#include <string>
+#include <fstream>
+ofstream myfile;
+ifstream yourfile;
+string line;
 
 #ifdef __APPLE__
 #  include <OpenGL/gl.h>
@@ -19,6 +29,7 @@ using namespace std;
 #define WINDOW_SIZE_HEIGHT 600
 #define TEAPOT_SPEED 0.01
 #define BOUND_OFFSET 0.65
+
 float angle = 20;
 int material = 1;
 float camPos[] = {20, 20, 20};	//where the camera is
@@ -28,14 +39,15 @@ float light_pos2[] = {0,8,8,1};//light 2
 list<struct Object> track;
 
 struct Object{
-	float posX, posY, posZ;
-	float rotateX, rotateY, rotateZ;
-	float scaleX, scaleY, scaleZ;
-	int shape;
-	int m;//material
-	float x_offset, y_offset, z_offset;//six plane, each float represent two plane
-	bool intersect;
+	float posX, posY, posZ = 0;
+	float rotateX, rotateY, rotateZ =0;
+	float scaleX, scaleY, scaleZ =0;
+	int shape =0;
+	int m =0;//material
+	float x_offset, y_offset, z_offset =0;//six plane, each float represent two plane
+	bool intersect = 0;
 };
+
 typedef struct materialStruct {
 	float m_amb[4];
 	float m_dif[4]; 
@@ -119,6 +131,118 @@ void setMaterial(int num) {
     		break;
 	}
 }
+
+void load(){
+	track.clear();
+	struct Object obj;
+
+	yourfile.open("saveDoc.txt");
+	float temp;
+
+	
+
+	// clear everything on current scene
+
+	//loading scene graph
+
+
+	if (yourfile.is_open()){
+	 	while (getline(yourfile,line)){
+			if(line==""){
+				break;
+	 		}
+	 		temp = line.find(",");
+	 		  obj.posX=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	    	temp = line.find(",");
+	 		obj.posY=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+	    	
+	    	temp = line.find(",");
+	 		obj.posZ=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	    	temp = line.find(",");
+	 		obj.rotateX=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+	    
+
+	    	temp = line.find(",");
+	 		obj.rotateY=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+	    		
+	    	temp = line.find(",");
+	 		obj.rotateZ=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	    	temp = line.find(",");
+	 		obj.scaleX=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+	    		
+	    	temp = line.find(",");
+	 		obj.scaleY=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	    	temp = line.find(",");
+	 		obj.scaleZ=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);	
+
+	    	temp = line.find(",");
+	 		obj.shape=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	    	temp = line.find(",");
+	 		obj.m=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+	    		
+	    	temp = line.find(",");
+	 		obj.x_offset=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	    	temp = line.find(",");
+	 		obj.y_offset=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+	    		    	
+	    	temp = line.find(",");
+	 		obj.z_offset=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
+	   //  	temp = line.find(",");
+	 		// bool intersect=stof(line.substr(0,temp));
+	   //  	//line=line.substr(temp+1);
+
+	    	track.push_back(obj);
+
+
+
+
+	 	}
+
+	}
+			yourfile.close();
+
+
+
+}
+
+
+void save(){
+	myfile.open("saveDoc.txt");
+	list<struct Object>::iterator p = track.begin();
+		while(p != track.end()){
+			myfile<< (*p).posX<<","<<(*p).posY<<","<<(*p).posZ<<","<<(*p).rotateX<<
+			","<<(*p).rotateY<<","<<(*p).rotateZ<<","<<(*p).scaleX<<","<<(*p).scaleY<<","<<(*p).scaleZ<<
+			","<<(*p).shape<<","<<(*p).m<<","<<(*p).x_offset<<","<<(*p).y_offset<<","<<
+			(*p).z_offset<<","<<(*p).intersect<<"\n";
+			p++;
+	}
+	myfile.close();
+
+}
+
+
+
 void eraseSelected() {
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
@@ -328,7 +452,9 @@ void keyboard(unsigned char key, int xIn, int yIn)
 	} else if (mod == GLUT_ACTIVE_CTRL) {
 		printf("%s\n", "Enter scale selected object mode");
 		scaleSelected(key);
-	} else {
+	} 
+
+	else {
 		switch (key)
 		{
 			case 'q':
@@ -347,6 +473,15 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				track.push_back(createObject(rand()%10, rand()%10+1, rand()%10, 0,0,0,1,1,1));
 				break;
 				}
+
+			case 's':
+				//printf("%s\n," "Save Scene");
+				save(); 
+				break;
+
+			case 'l':
+				load();
+				break;
 			case 'm':
 				printf("%s\n", "Change the material of selected object to current material");
 				changeSelectedMaterial();
