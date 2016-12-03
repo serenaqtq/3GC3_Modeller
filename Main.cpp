@@ -32,6 +32,7 @@ string line;
 
 float angle = 20;
 int material = 1;
+int texture = 0;
 float camPos[] = {20, 20, 20};	//where the camera is
 int mouseX = 0, mouseY = 0; 
 float light_pos1[] = {800,800, 0,1};//light 1
@@ -43,6 +44,7 @@ struct Object{
 	float rotateX, rotateY, rotateZ =0;
 	float scaleX, scaleY, scaleZ =0;
 	int shape =0;
+	int t =0; //texture
 	int m =0;//material
 	float x_offset, y_offset, z_offset =0;//six plane, each float represent two plane
 	bool intersect = 0;
@@ -89,6 +91,115 @@ materialStruct m5 = {//turquoise
     {0.297254,0.30829,0.306678},
     0.1
 };
+
+/* TEXTURE */
+GLubyte* image;
+GLubyte* image1;
+GLubyte* image2;
+
+int width, height, max1;
+GLuint myTex[3];
+
+GLubyte* LoadPPM(char* file, int* width, int* height, int* max1)
+{
+    GLubyte* img;
+    FILE *fd;
+    int n, m;
+    int  k, nm;
+    char c;
+    int i;
+    char b[100];
+    float s;
+    int red, green, blue;
+    
+    /* first open file and check if it's an ASCII PPM (indicated by P3 at the start) */
+    fd = fopen(file, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3')
+    {
+        printf("%s is not a PPM file!\n",file);
+        exit(0);
+    }
+    printf("%s is a PPM file\n", file);
+    fscanf(fd, "%c",&c);
+    
+    /* next, skip past the comments - any line starting with #*/
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    
+    /* now get the dimensions and max colour value from the image */
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    
+    printf("%d rows  %d columns  max value= %d\n",n,m,k);
+    
+    /* calculate number of pixels and allocate storage for this */
+    nm = n*m;
+    img = (GLubyte*)malloc(3*sizeof(GLuint)*nm);
+    s=255.0/k;
+    
+    /* for every pixel, grab the read green and blue values, storing them in the image data array */
+    for(i=0;i<nm;i++)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        img[3*nm-3*i-3]=red*s;
+        img[3*nm-3*i-2]=green*s;
+        img[3*nm-3*i-1]=blue*s;
+    }
+    
+    /* finally, set the "return parameters" (width, height, max) and return the image array */
+    *width = n;
+    *height = m;
+    *max1 = k;
+    
+    return img;
+}
+
+
+void setTexture(int num) {
+	switch (num) {
+		case 1:
+		    /* Set the image parameters*/
+		    glBindTexture(GL_TEXTURE_2D, myTex[0]);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		     /*Get and save image*/
+		    image = LoadPPM("image.ppm",&width, &height, &max1);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+		                 GL_UNSIGNED_BYTE, image);
+		    break;
+		case 2:
+			/* Set the image parameters*/
+		    glBindTexture(GL_TEXTURE_2D, myTex[1]);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);    
+		    /*Get and save image*/
+		    image1 = LoadPPM("image1.ppm",&width, &height, &max1);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+		                 GL_UNSIGNED_BYTE, image1);
+	    	break;
+
+		case 3:
+			/* Set the image parameters*/
+		    glBindTexture(GL_TEXTURE_2D, myTex[2]);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		    
+		    
+		    /*Get and save image*/
+		    image2 = LoadPPM("image2.ppm",&width, &height, &max1);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+		                 GL_UNSIGNED_BYTE, image2);
+		    break;
+	}
+}
 
 void setMaterial(int num) {
 	switch (num) {
@@ -191,6 +302,10 @@ void load(){
 	 		obj.shape=stof(line.substr(0,temp));
 	    	line=line.substr(temp+1);
 
+	 		temp = line.find(",");
+	 		obj.t=stof(line.substr(0,temp));
+	    	line=line.substr(temp+1);
+
 	    	temp = line.find(",");
 	 		obj.m=stof(line.substr(0,temp));
 	    	line=line.substr(temp+1);
@@ -212,10 +327,6 @@ void load(){
 	   //  	//line=line.substr(temp+1);
 
 	    	track.push_back(obj);
-
-
-
-
 	 	}
 	 	yourfile.close();
 
@@ -234,7 +345,7 @@ void save(){
 		while(p != track.end()){
 			myfile<< (*p).posX<<","<<(*p).posY<<","<<(*p).posZ<<","<<(*p).rotateX<<
 			","<<(*p).rotateY<<","<<(*p).rotateZ<<","<<(*p).scaleX<<","<<(*p).scaleY<<","<<(*p).scaleZ<<
-			","<<(*p).shape<<","<<(*p).m<<","<<(*p).x_offset<<","<<(*p).y_offset<<","<<
+			","<<(*p).shape<<","<<(*p).t<<","<<(*p).m<<","<<(*p).x_offset<<","<<(*p).y_offset<<","<<
 			(*p).z_offset<<","<<(*p).intersect<<"\n";
 			p++;
 	}
@@ -332,6 +443,7 @@ struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, 
 	result.scaleY = sY;
 	result.scaleZ = sZ;
 	result.intersect = true;
+	result.t = texture;
 	result.m = material;
 	result.shape = rand() % 5;
 	if (result.shape == 4) {
@@ -362,6 +474,16 @@ void changeSelectedMaterial() {
 	}
 }
 
+void changeSelectedTexture() {
+	list<struct Object>::iterator p = track.begin();
+	while(p != track.end()){
+		if ((*p).intersect) {
+			(*p).t = texture;
+		}
+		
+		p++;
+	}
+}
 void rotateSelected(int key) {
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
@@ -520,6 +642,9 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				printf("%s\n", "Change the material of selected object to current material");
 				changeSelectedMaterial();
 				break;
+			case 't':
+			 	printf("%s\n", "Change the texture of selected object to current texture");
+				changeSelectedTexture();
 			case '1':
 				material = 1;
 				printf("%s\n", "Switch material to m1");
@@ -539,6 +664,18 @@ void keyboard(unsigned char key, int xIn, int yIn)
 			case '5':
 				material = 5;
 				printf("%s\n", "Switch material to m5");
+				break;
+			case '6':
+				texture = 0;
+				printf("%s\n", "Switch texture to image");
+				break;
+			case '7':
+				texture = 1;
+				printf("%s\n", "Switch texture to image1");
+				break;
+			case '8':
+				texture = 2;
+				printf("%s\n", "Switch texture to image2");
 				break;
 			
 		}
@@ -682,6 +819,10 @@ void init(void)
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
 
+     /* TEXTURES */
+    glEnable(GL_TEXTURE_2D);
+    glGenTextures(3, myTex);
+
     //light
 	glLightfv(GL_LIGHT0, GL_POSITION, light_pos1);
     glLightfv(GL_LIGHT1, GL_POSITION, light_pos2);
@@ -702,6 +843,7 @@ void init(void)
 
 void draw(struct Object in) {
 	setMaterial(in.m);
+	setTexture(in.t);
 	switch (in.shape){
 		case 0:
 			glutSolidCube(1);
@@ -778,8 +920,12 @@ void info() {
 	printf("%s\n\n", "Selected object: red");
 	printf("%s\n\n", "Note: the actual colour may looks weird because of the material");
 	printf("%s\n\n", "q: quit the program");
+
 	printf("%s\n\n", "1 to 5: switch current material");
 	printf("%s\n\n", "m: apply current material to selected object");
+	printf("%s\n\n", "6 to 8: switch current material");
+	printf("%s\n\n", "t: apply current material to selected object");
+	
 	printf("%s\n\n", "l: load from file");
 	printf("%s\n\n", "s: save to file");
 	printf("%s\n\n", "click(right/left): select object");
@@ -791,6 +937,7 @@ void info() {
 	printf("%s\n\n", "h/j/k/y/u/i: control two lighting source on xyz axis");
 }
 
+
 int main(int argc, char** argv)
 {
 	info();
@@ -799,7 +946,6 @@ int main(int argc, char** argv)
 	init();
 	callBackInit();
 	
-
 	glutMainLoop();				//starts the event glutMainLoop
 	return(0);					//return may not be necessary on all compilers
 }
