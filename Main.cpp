@@ -1,3 +1,5 @@
+//1207766 Yanting Zhang
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
