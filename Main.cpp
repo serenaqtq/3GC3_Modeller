@@ -1,4 +1,5 @@
-//1207766 Yanting Zhang
+//
+//1207766 Yanting
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -164,7 +165,7 @@ GLubyte* LoadPPM(char* file, int* width, int* height, int* max1)
 
 void setTexture(int num) {
 	switch (num) {
-		case 1:
+		case 6:
 		    /* Set the image parameters*/
 		    glBindTexture(GL_TEXTURE_2D, myTex[0]);
 		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -174,8 +175,10 @@ void setTexture(int num) {
 		    image = LoadPPM("image.ppm",&width, &height, &max1);
 		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
 		                 GL_UNSIGNED_BYTE, image);
+
+		    //glBindTexture(GL_TEXTURE_2D, myTex[0]);
 		    break;
-		case 2:
+		case 7:
 			/* Set the image parameters*/
 		    glBindTexture(GL_TEXTURE_2D, myTex[1]);
 		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -185,9 +188,11 @@ void setTexture(int num) {
 		    image1 = LoadPPM("image1.ppm",&width, &height, &max1);
 		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
 		                 GL_UNSIGNED_BYTE, image1);
+
+		    //glBindTexture(GL_TEXTURE_2D, myTex[1]);
 	    	break;
 
-		case 3:
+		case 8:
 			/* Set the image parameters*/
 		    glBindTexture(GL_TEXTURE_2D, myTex[2]);
 		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -199,6 +204,8 @@ void setTexture(int num) {
 		    image2 = LoadPPM("image2.ppm",&width, &height, &max1);
 		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
 		                 GL_UNSIGNED_BYTE, image2);
+
+		    //glBindTexture(GL_TEXTURE_2D, myTex[2]);
 		    break;
 	}
 }
@@ -668,15 +675,15 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				printf("%s\n", "Switch material to m5");
 				break;
 			case '6':
-				texture = 0;
+				texture = 6;
 				printf("%s\n", "Switch texture to image");
 				break;
 			case '7':
-				texture = 1;
+				texture = 7;
 				printf("%s\n", "Switch texture to image1");
 				break;
 			case '8':
-				texture = 2;
+				texture = 8;
 				printf("%s\n", "Switch texture to image2");
 				break;
 			
@@ -846,6 +853,7 @@ void init(void)
 void draw(struct Object in) {
 	setMaterial(in.m);
 	setTexture(in.t);
+
 	switch (in.shape){
 		case 0:
 			glutSolidCube(1);
@@ -925,8 +933,8 @@ void info() {
 
 	printf("%s\n\n", "1 to 5: switch current material");
 	printf("%s\n\n", "m: apply current material to selected object");
-	printf("%s\n\n", "6 to 8: switch current material");
-	printf("%s\n\n", "t: apply current material to selected object");
+	printf("%s\n\n", "6 to 8: switch current texture");
+	printf("%s\n\n", "t: apply current texture to selected object");
 	
 	printf("%s\n\n", "l: load from file");
 	printf("%s\n\n", "s: save to file");
