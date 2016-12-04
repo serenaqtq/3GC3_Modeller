@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+//
+//1207766 Yanting
+
+>>>>>>> 00e875470a66d10cc9f9316d80ca7f9f7ad79d01
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -85,7 +91,126 @@ materialStruct m5 = {//turquoise
     0.1
 };
 
+<<<<<<< HEAD
 void setMaterial(int num) {//set five material
+=======
+/* TEXTURE */
+GLubyte* image;
+GLubyte* image1;
+GLubyte* image2;
+
+int width, height, max1;
+GLuint myTex[3];
+
+GLubyte* LoadPPM(char* file, int* width, int* height, int* max1)
+{
+    GLubyte* img;
+    FILE *fd;
+    int n, m;
+    int  k, nm;
+    char c;
+    int i;
+    char b[100];
+    float s;
+    int red, green, blue;
+    
+    /* first open file and check if it's an ASCII PPM (indicated by P3 at the start) */
+    fd = fopen(file, "r");
+    fscanf(fd,"%[^\n] ",b);
+    if(b[0]!='P'|| b[1] != '3')
+    {
+        printf("%s is not a PPM file!\n",file);
+        exit(0);
+    }
+    printf("%s is a PPM file\n", file);
+    fscanf(fd, "%c",&c);
+    
+    /* next, skip past the comments - any line starting with #*/
+    while(c == '#')
+    {
+        fscanf(fd, "%[^\n] ", b);
+        printf("%s\n",b);
+        fscanf(fd, "%c",&c);
+    }
+    ungetc(c,fd);
+    
+    /* now get the dimensions and max colour value from the image */
+    fscanf(fd, "%d %d %d", &n, &m, &k);
+    
+    printf("%d rows  %d columns  max value= %d\n",n,m,k);
+    
+    /* calculate number of pixels and allocate storage for this */
+    nm = n*m;
+    img = (GLubyte*)malloc(3*sizeof(GLuint)*nm);
+    s=255.0/k;
+    
+    /* for every pixel, grab the read green and blue values, storing them in the image data array */
+    for(i=0;i<nm;i++)
+    {
+        fscanf(fd,"%d %d %d",&red, &green, &blue );
+        img[3*nm-3*i-3]=red*s;
+        img[3*nm-3*i-2]=green*s;
+        img[3*nm-3*i-1]=blue*s;
+    }
+    
+    /* finally, set the "return parameters" (width, height, max) and return the image array */
+    *width = n;
+    *height = m;
+    *max1 = k;
+    
+    return img;
+}
+
+
+void setTexture(int num) {
+	switch (num) {
+		case 6:
+		    /* Set the image parameters*/
+		    glBindTexture(GL_TEXTURE_2D, myTex[0]);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		     /*Get and save image*/
+		    image = LoadPPM("image.ppm",&width, &height, &max1);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+		                 GL_UNSIGNED_BYTE, image);
+
+		    //glBindTexture(GL_TEXTURE_2D, myTex[0]);
+		    break;
+		case 7:
+			/* Set the image parameters*/
+		    glBindTexture(GL_TEXTURE_2D, myTex[1]);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);    
+		    /*Get and save image*/
+		    image1 = LoadPPM("image1.ppm",&width, &height, &max1);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+		                 GL_UNSIGNED_BYTE, image1);
+
+		    //glBindTexture(GL_TEXTURE_2D, myTex[1]);
+	    	break;
+
+		case 8:
+			/* Set the image parameters*/
+		    glBindTexture(GL_TEXTURE_2D, myTex[2]);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		    
+		    
+		    /*Get and save image*/
+		    image2 = LoadPPM("image2.ppm",&width, &height, &max1);
+		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
+		                 GL_UNSIGNED_BYTE, image2);
+
+		    //glBindTexture(GL_TEXTURE_2D, myTex[2]);
+		    break;
+	}
+}
+
+void setMaterial(int num) {
+>>>>>>> 00e875470a66d10cc9f9316d80ca7f9f7ad79d01
 	switch (num) {
 		case 1:
 			//printf("%s\n", "m1");
@@ -516,6 +641,21 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				material = 5;
 				printf("%s\n", "Switch material to m5");
 				break;
+<<<<<<< HEAD
+=======
+			case '6':
+				texture = 6;
+				printf("%s\n", "Switch texture to image");
+				break;
+			case '7':
+				texture = 7;
+				printf("%s\n", "Switch texture to image1");
+				break;
+			case '8':
+				texture = 8;
+				printf("%s\n", "Switch texture to image2");
+				break;
+>>>>>>> 00e875470a66d10cc9f9316d80ca7f9f7ad79d01
 			
 		}
 	}
@@ -705,6 +845,11 @@ void newShape() {//Customer shape
 
 void draw(struct Object in) {
 	setMaterial(in.m);
+<<<<<<< HEAD
+=======
+	setTexture(in.t);
+
+>>>>>>> 00e875470a66d10cc9f9316d80ca7f9f7ad79d01
 	switch (in.shape){
 		case 0:
 			glutSolidCube(1);
@@ -777,6 +922,12 @@ void info() {
 	printf("%s\n\n", "q: quit the program");
 	printf("%s\n\n", "1 to 5: switch current material");
 	printf("%s\n\n", "m: apply current material to selected object");
+<<<<<<< HEAD
+=======
+	printf("%s\n\n", "6 to 8: switch current texture");
+	printf("%s\n\n", "t: apply current texture to selected object");
+	
+>>>>>>> 00e875470a66d10cc9f9316d80ca7f9f7ad79d01
 	printf("%s\n\n", "l: load from file");
 	printf("%s\n\n", "s: save to file");
 	printf("%s\n\n", "click(right/left): select object");
