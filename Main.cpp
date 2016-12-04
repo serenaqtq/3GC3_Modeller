@@ -1,5 +1,3 @@
-//1207766 Yanting Zhang
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -8,8 +6,6 @@
 #include <iostream>
 using namespace std;
 #include <string.h>
-
-
 // for file saving loading
 //#include <string>
 #include <fstream>
@@ -29,30 +25,25 @@ string line;
 
 #define WINDOW_SIZE_WIDTH 600
 #define WINDOW_SIZE_HEIGHT 600
-#define TEAPOT_SPEED 0.01
-#define BOUND_OFFSET 0.65
-
 float angle = 20;
 int material = 1;
-int texture = 0;
 float camPos[] = {20, 20, 20};	//where the camera is
 int mouseX = 0, mouseY = 0; 
 float light_pos1[] = {800,800, 0,1};//light 1
 float light_pos2[] = {0,800,800,1};//light 2
-list<struct Object> track;
+list<struct Object> track;//object list
 
 struct Object{
 	float posX, posY, posZ = 0;
 	float rotateX, rotateY, rotateZ =0;
 	float scaleX, scaleY, scaleZ =0;
 	int shape =0;
-	int t =0; //texture
 	int m =0;//material
 	float x_offset, y_offset, z_offset =0;//six plane, each float represent two plane
 	bool intersect = 0;
 };
 
-typedef struct materialStruct {
+typedef struct materialStruct {//define 5 different material
 	float m_amb[4];
 	float m_dif[4]; 
 	float m_spec[4]; 
@@ -94,116 +85,7 @@ materialStruct m5 = {//turquoise
     0.1
 };
 
-/* TEXTURE */
-GLubyte* image;
-GLubyte* image1;
-GLubyte* image2;
-
-int width, height, max1;
-GLuint myTex[3];
-
-GLubyte* LoadPPM(char* file, int* width, int* height, int* max1)
-{
-    GLubyte* img;
-    FILE *fd;
-    int n, m;
-    int  k, nm;
-    char c;
-    int i;
-    char b[100];
-    float s;
-    int red, green, blue;
-    
-    /* first open file and check if it's an ASCII PPM (indicated by P3 at the start) */
-    fd = fopen(file, "r");
-    fscanf(fd,"%[^\n] ",b);
-    if(b[0]!='P'|| b[1] != '3')
-    {
-        printf("%s is not a PPM file!\n",file);
-        exit(0);
-    }
-    printf("%s is a PPM file\n", file);
-    fscanf(fd, "%c",&c);
-    
-    /* next, skip past the comments - any line starting with #*/
-    while(c == '#')
-    {
-        fscanf(fd, "%[^\n] ", b);
-        printf("%s\n",b);
-        fscanf(fd, "%c",&c);
-    }
-    ungetc(c,fd);
-    
-    /* now get the dimensions and max colour value from the image */
-    fscanf(fd, "%d %d %d", &n, &m, &k);
-    
-    printf("%d rows  %d columns  max value= %d\n",n,m,k);
-    
-    /* calculate number of pixels and allocate storage for this */
-    nm = n*m;
-    img = (GLubyte*)malloc(3*sizeof(GLuint)*nm);
-    s=255.0/k;
-    
-    /* for every pixel, grab the read green and blue values, storing them in the image data array */
-    for(i=0;i<nm;i++)
-    {
-        fscanf(fd,"%d %d %d",&red, &green, &blue );
-        img[3*nm-3*i-3]=red*s;
-        img[3*nm-3*i-2]=green*s;
-        img[3*nm-3*i-1]=blue*s;
-    }
-    
-    /* finally, set the "return parameters" (width, height, max) and return the image array */
-    *width = n;
-    *height = m;
-    *max1 = k;
-    
-    return img;
-}
-
-
-void setTexture(int num) {
-	switch (num) {
-		case 1:
-		    /* Set the image parameters*/
-		    glBindTexture(GL_TEXTURE_2D, myTex[0]);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		     /*Get and save image*/
-		    image = LoadPPM("image.ppm",&width, &height, &max1);
-		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-		                 GL_UNSIGNED_BYTE, image);
-		    break;
-		case 2:
-			/* Set the image parameters*/
-		    glBindTexture(GL_TEXTURE_2D, myTex[1]);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);    
-		    /*Get and save image*/
-		    image1 = LoadPPM("image1.ppm",&width, &height, &max1);
-		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-		                 GL_UNSIGNED_BYTE, image1);
-	    	break;
-
-		case 3:
-			/* Set the image parameters*/
-		    glBindTexture(GL_TEXTURE_2D, myTex[2]);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		    glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-		    
-		    
-		    /*Get and save image*/
-		    image2 = LoadPPM("image2.ppm",&width, &height, &max1);
-		    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB,
-		                 GL_UNSIGNED_BYTE, image2);
-		    break;
-	}
-}
-
-void setMaterial(int num) {
+void setMaterial(int num) {//set five material
 	switch (num) {
 		case 1:
 			//printf("%s\n", "m1");
@@ -245,7 +127,7 @@ void setMaterial(int num) {
 	}
 }
 
-void load(){
+void load(){//file loader
 	track.clear();
 	struct Object obj;
 	printf("%s\n", "Enter file name with .txt");
@@ -304,10 +186,6 @@ void load(){
 	 		obj.shape=stof(line.substr(0,temp));
 	    	line=line.substr(temp+1);
 
-	 		temp = line.find(",");
-	 		obj.t=stof(line.substr(0,temp));
-	    	line=line.substr(temp+1);
-
 	    	temp = line.find(",");
 	 		obj.m=stof(line.substr(0,temp));
 	    	line=line.substr(temp+1);
@@ -323,11 +201,6 @@ void load(){
 	    	temp = line.find(",");
 	 		obj.z_offset=stof(line.substr(0,temp));
 	    	line=line.substr(temp+1);
-
-	   //  	temp = line.find(",");
-	 		// bool intersect=stof(line.substr(0,temp));
-	   //  	//line=line.substr(temp+1);
-
 	    	track.push_back(obj);
 	 	}
 	 	yourfile.close();
@@ -347,7 +220,7 @@ void save(){
 		while(p != track.end()){
 			myfile<< (*p).posX<<","<<(*p).posY<<","<<(*p).posZ<<","<<(*p).rotateX<<
 			","<<(*p).rotateY<<","<<(*p).rotateZ<<","<<(*p).scaleX<<","<<(*p).scaleY<<","<<(*p).scaleZ<<
-			","<<(*p).shape<<","<<(*p).t<<","<<(*p).m<<","<<(*p).x_offset<<","<<(*p).y_offset<<","<<
+			","<<(*p).shape<<","<<(*p).m<<","<<(*p).x_offset<<","<<(*p).y_offset<<","<<
 			(*p).z_offset<<","<<(*p).intersect<<"\n";
 			p++;
 	}
@@ -361,13 +234,11 @@ void eraseSelected() {
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect){
-			//printf("%i\n", (*p).intersect);
 			track.erase(p);
 			break;
 		}
 		p++;
 	}
-	//return p;
 }
 
 void CalcIntersections(struct Object &teapot){
@@ -398,10 +269,6 @@ void CalcIntersections(struct Object &teapot){
 	Rd[1] /= m;
 	Rd[2] /= m;
 
-	//printf("R0: %f, %f, %f | ", R0[0], R0[1], R0[2]);
-	//printf("R1: %f, %f, %f | ", R1[0], R1[1], R1[2]);
-	//printf("Rd: %f, %f, %f | ", Rd[0], Rd[1], Rd[2]);
-
 	//---calculate intersection point now-----------------------------------
 	//approx the teapot with a box of radius 1 centered around the teapot centered
 	//goes against the xy plane to test the Intersection
@@ -431,7 +298,6 @@ void CalcIntersections(struct Object &teapot){
 	else
 		teapot.intersect = false;
 
-	//printf("\n");
 }
 struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, int sY, int sZ) {
 	struct Object result;
@@ -445,9 +311,8 @@ struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, 
 	result.scaleY = sY;
 	result.scaleZ = sZ;
 	result.intersect = true;
-	result.t = texture;
 	result.m = material;
-	result.shape = rand() % 5;
+	result.shape = rand() % 6;
 	if (result.shape == 4) {
 		result.x_offset = 0.65;
 		result.y_offset = 0.65;
@@ -465,7 +330,7 @@ struct Object createObject(int x, int y, int z, int rX, int rY, int rZ, int sX, 
 	return result;
 }
 
-void changeSelectedMaterial() {
+void changeSelectedMaterial() {//change material for a selected object
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect) {
@@ -476,17 +341,7 @@ void changeSelectedMaterial() {
 	}
 }
 
-void changeSelectedTexture() {
-	list<struct Object>::iterator p = track.begin();
-	while(p != track.end()){
-		if ((*p).intersect) {
-			(*p).t = texture;
-		}
-		
-		p++;
-	}
-}
-void rotateSelected(int key) {
+void rotateSelected(int key) {//keyboard control rotation
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect) {
@@ -517,8 +372,7 @@ void rotateSelected(int key) {
 }
 
 
-void scaleSelected(int key) {
-	//printf("%i %i\n", 'a', key);
+void scaleSelected(int key) {//keyboard control scale
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect) {
@@ -528,7 +382,7 @@ void scaleSelected(int key) {
 						(*p).scaleZ-=0.2;
 						(*p).z_offset -= 0.2;//(*p).scaleZ+0.2;
 					} else {
-						printf("%s\n", "Too small! try to scale another axis!");
+						printf("%s\n", "Too small! try to scale another axis!");//cannot make the scale less than zero
 					}
 					
 					break;
@@ -563,14 +417,12 @@ void scaleSelected(int key) {
 					break;
 			}
 			(*p).intersect = true;
-			//CalcIntersections(*p);
 			break;
 		}		
 		p++;
 	}	
 }
 
-//keyboard for exiting when q or escape is pressed
 void keyboard(unsigned char key, int xIn, int yIn)
 {
 	int mod = glutGetModifiers();
@@ -644,9 +496,6 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				printf("%s\n", "Change the material of selected object to current material");
 				changeSelectedMaterial();
 				break;
-			case 't':
-			 	printf("%s\n", "Change the texture of selected object to current texture");
-				changeSelectedTexture();
 			case '1':
 				material = 1;
 				printf("%s\n", "Switch material to m1");
@@ -667,22 +516,10 @@ void keyboard(unsigned char key, int xIn, int yIn)
 				material = 5;
 				printf("%s\n", "Switch material to m5");
 				break;
-			case '6':
-				texture = 0;
-				printf("%s\n", "Switch texture to image");
-				break;
-			case '7':
-				texture = 1;
-				printf("%s\n", "Switch texture to image1");
-				break;
-			case '8':
-				texture = 2;
-				printf("%s\n", "Switch texture to image2");
-				break;
 			
 		}
 	}
-	//to get the u,j work
+	//to get the lighting work
 	glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
     glLightfv(GL_LIGHT0, GL_POSITION, light_pos1);
@@ -690,7 +527,7 @@ void keyboard(unsigned char key, int xIn, int yIn)
 	glutPostRedisplay();
 }
 
-void translateSelected(int key) {
+void translateSelected(int key) {//keyboard control translate
 	list<struct Object>::iterator p = track.begin();
 	while(p != track.end()){
 		if ((*p).intersect) {
@@ -753,12 +590,10 @@ void mouse(int btn, int state, int x, int y){
 		p++;
 		
 	}
-	//printf("%s\n", "compute intersection complete");
 	if(btn == GLUT_RIGHT_BUTTON) {
 		if (state == GLUT_DOWN){
 			
 			if (!track.empty()) {
-				//printf("%s\n", "perform erase");
 				eraseSelected();
 			} else {
 				printf("%s\n", "No object in the scene");
@@ -774,7 +609,7 @@ void mouse(int btn, int state, int x, int y){
 }
 
 void drawAxis()
-{	//glDisable(GL_COLOR_MATERIAL);
+{	
 	glBegin(GL_LINES);
 		glColor3f(1, 0, 0);
 		glVertex3f(0,0,0);
@@ -786,11 +621,9 @@ void drawAxis()
 		glVertex3f(0,0,0);
 		glVertex3f(0,0,50);
 	glEnd();
-	//glEnable(GL_COLOR_MATERIAL);
 }
 
 void drawPlane() {
-	//glDisable(GL_COLOR_MATERIAL);
 	glBegin(GL_QUADS);
 		glColor3f(1,0.43,0.78);
 		glNormal3f(0,1,0);		
@@ -803,7 +636,6 @@ void drawPlane() {
 		glNormal3f(0,1,0);
 		glVertex3f(50,0,0);
 	glEnd();
-	//glEnable(GL_COLOR_MATERIAL);
 }
 
 void init(void)
@@ -820,10 +652,6 @@ void init(void)
     glEnable(GL_LIGHTING);
     glEnable(GL_LIGHT0);
     glEnable(GL_LIGHT1);
-
-     /* TEXTURES */
-    glEnable(GL_TEXTURE_2D);
-    glGenTextures(3, myTex);
 
     //light
 	glLightfv(GL_LIGHT0, GL_POSITION, light_pos1);
@@ -842,10 +670,41 @@ void init(void)
     glEnable(GL_CULL_FACE);
 }
 
+void newShape() {//Customer shape
+	glBegin(GL_QUADS);
+		glNormal3f(0,1,0);
+		glVertex3f(-0.5,0,-0.5);
+		glNormal3f(0,1,0);
+		glVertex3f(-0.5,0,0.5);
+		glNormal3f(0,1,0);
+		glVertex3f(0.5,0,0.5);
+		glNormal3f(0,1,0);
+		glVertex3f(0.5,0,-0.5);
+	glEnd();
+	glBegin(GL_QUADS);
+		glNormal3f(0,1,0);
+		glVertex3f(-0.5,1,-0.5);
+		glNormal3f(0,1,0);
+		glVertex3f(-0.5,1,0.5);
+		glNormal3f(0,1,0);
+		glVertex3f(0.5,1,0.5);
+		glNormal3f(0,1,0);
+		glVertex3f(0.5,1,-0.5);
+	glEnd();
+	glBegin(GL_QUADS);
+		glNormal3f(1,-1,0);
+		glVertex3f(0,1,0.5);
+		glNormal3f(1,1,0);
+		glVertex3f(0,0,0.5);
+		glNormal3f(1,-1,0);
+		glVertex3f(0,0,-0.5);
+		glNormal3f(1,1,0);
+		glVertex3f(0,1,-0.5);
+	glEnd();
+}
 
 void draw(struct Object in) {
 	setMaterial(in.m);
-	setTexture(in.t);
 	switch (in.shape){
 		case 0:
 			glutSolidCube(1);
@@ -862,6 +721,8 @@ void draw(struct Object in) {
 		case 4:
 			glutSolidIcosahedron();
 			break;
+		case 5:
+			newShape();
 	}
 }
 
@@ -869,16 +730,8 @@ void draw(struct Object in) {
 //display function, also calls the position update and ray calc
 void display(void)
 {
-	//CalculatePosition();
-	
-	
-	//glClearColor(0,0,0,0);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    
-    //enable material
-    //setMaterial(material);
-    
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);    
+     
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
 	gluLookAt(camPos[0], camPos[1], camPos[2], 0, 0, 0, 0,1,0);
@@ -902,7 +755,6 @@ void display(void)
 		glPopMatrix();
 		p++;
 	}
-	//printf("%i\n", track.size());
 	//switch our buffers for a smooth animation
 	glutSwapBuffers();
 }
@@ -918,16 +770,13 @@ void callBackInit(){
 void info() {
 	printf("%s\n\n", "Material: m1 to m5. default as m1");
 	printf("%s\n\n", "Object shape: cube, teapot, sphere, octahedron, Icosahedron");
+	printf("%s\n\n", "Extra feature: customer shape as a rotated 'H'");
 	printf("%s\n\n", "Unselected object: yellow");
 	printf("%s\n\n", "Selected object: red");
 	printf("%s\n\n", "Note: the actual colour may looks weird because of the material");
 	printf("%s\n\n", "q: quit the program");
-
 	printf("%s\n\n", "1 to 5: switch current material");
 	printf("%s\n\n", "m: apply current material to selected object");
-	printf("%s\n\n", "6 to 8: switch current material");
-	printf("%s\n\n", "t: apply current material to selected object");
-	
 	printf("%s\n\n", "l: load from file");
 	printf("%s\n\n", "s: save to file");
 	printf("%s\n\n", "click(right/left): select object");
@@ -939,7 +788,6 @@ void info() {
 	printf("%s\n\n", "h/j/k/y/u/i: control two lighting source on xyz axis");
 }
 
-
 int main(int argc, char** argv)
 {
 	info();
@@ -948,6 +796,7 @@ int main(int argc, char** argv)
 	init();
 	callBackInit();
 	
+
 	glutMainLoop();				//starts the event glutMainLoop
 	return(0);					//return may not be necessary on all compilers
 }
